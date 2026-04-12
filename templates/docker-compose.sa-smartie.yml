@@ -1,0 +1,19 @@
+# Template docker-compose.yml cho sa-smartie
+# Copy vào repo sa-smartie, xóa nginx/certbot nếu đang có
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      # ... các biến môi trường khác
+    networks:
+      - proxy-net
+
+  # Thêm db, redis... nếu cần — dùng network internal như e-com
+
+networks:
+  proxy-net:
+    external: true
