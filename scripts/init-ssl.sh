@@ -10,6 +10,8 @@ DOMAINS=(
     "api.miushop.io.vn"
     "miuvis.miushop.io.vn"
     "smartie.miushop.io.vn"
+    "router.miushop.io.vn"
+    "openclaw.miushop.io.vn"
 )
 EMAIL="your-email@gmail.com"   # ← đổi thành email thật
 
