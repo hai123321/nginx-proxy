@@ -38,7 +38,7 @@ sleep 2
 
 for DOMAIN in "${DOMAINS[@]}"; do
     echo "==> Cấp SSL cho $DOMAIN"
-    docker compose run --rm certbot certonly \
+    docker compose run --rm --entrypoint certbot certbot certonly \
         --webroot \
         --webroot-path=/var/www/certbot \
         --email "$EMAIL" \
