@@ -13,8 +13,28 @@ DOMAINS=(
 )
 EMAIL="your-email@gmail.com"   # ← đổi thành email thật
 
-# Khởi động nginx với config HTTP-only tạm thời để ACME challenge hoạt động
+CONF_DIR="./nginx/conf.d"
+BACKUP_DIR="./nginx/conf.d.bak"
+
+# Backup config thật, dùng config tạm để nginx start được (không cần upstream)
+echo "==> Backup nginx conf.d và dùng config tạm..."
+mv "$CONF_DIR" "$BACKUP_DIR"
+mkdir -p "$CONF_DIR"
+
+cat > "$CONF_DIR/acme.conf" <<'EOF'
+server {
+    listen 80 default_server;
+    server_name _;
+    location /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location / { return 200 'ok'; }
+}
+EOF
+
+# Khởi động nginx với config HTTP-only tạm thời
+echo "==> Khởi động nginx tạm..."
 docker compose up -d nginx
+
+sleep 2
 
 for DOMAIN in "${DOMAINS[@]}"; do
     echo "==> Cấp SSL cho $DOMAIN"
@@ -27,6 +47,12 @@ for DOMAIN in "${DOMAINS[@]}"; do
         -d "$DOMAIN"
 done
 
+# Restore config thật
+echo "==> Restore nginx conf.d..."
+rm -rf "$CONF_DIR"
+mv "$BACKUP_DIR" "$CONF_DIR"
+
 echo "==> Reload nginx với SSL"
 docker compose exec nginx nginx -s reload
-echo "✅ Done!"
+
+echo "✅ Done! SSL đã được cấp cho tất cả domains."
