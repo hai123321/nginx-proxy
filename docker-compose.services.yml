@@ -1,0 +1,39 @@
+services:
+  router:
+    build: ./services/9router
+    container_name: router-app
+    restart: unless-stopped
+    env_file: ./services/9router/.env
+    volumes:
+      - router-data:/var/lib/9router
+    networks:
+      - proxy-net
+
+  openclaw:
+    build: ./services/openclaw
+    container_name: openclaw-app
+    restart: unless-stopped
+    env_file: ./services/openclaw/.env
+    volumes:
+      - openclaw-data:/root/.openclaw
+    networks:
+      - proxy-net
+
+  hermes:
+    build: ./services/hermes-agent
+    container_name: hermes-app
+    restart: unless-stopped
+    env_file: ./services/hermes-agent/.env
+    volumes:
+      - hermes-data:/opt/data
+    networks:
+      - proxy-net
+
+volumes:
+  router-data:
+  openclaw-data:
+  hermes-data:
+
+networks:
+  proxy-net:
+    external: true
