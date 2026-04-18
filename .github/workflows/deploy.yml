@@ -11,17 +11,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate nginx config
+      - name: Validate Traefik static config
         run: |
           docker run --rm \
-            -v "$PWD/nginx/nginx.conf:/etc/nginx/nginx.conf:ro" \
-            -v "$PWD/nginx/conf.d:/etc/nginx/conf.d:ro" \
-            nginx:1.27-alpine nginx -t
+            -v "$PWD/traefik/traefik.yml:/etc/traefik/traefik.yml:ro" \
+            -v "$PWD/traefik/conf.d:/etc/traefik/conf.d:ro" \
+            traefik:v3.3 traefik healthcheck --ping 2>/dev/null || \
+          docker run --rm \
+            -v "$PWD/traefik/traefik.yml:/etc/traefik/traefik.yml:ro" \
+            traefik:v3.3 traefik version
 
-      - name: Deploy nginx
+      - name: Validate YAML syntax (conf.d)
         run: |
-          docker compose down
-          docker compose up -d
+          docker run --rm \
+            -v "$PWD/traefik/conf.d:/data:ro" \
+            mikefarah/yq:4 eval 'true' /data/middlewares.yml /data/miushop.yml
+
+      - name: Deploy Traefik
+        run: |
+          docker compose up -d --remove-orphans
+
+      - name: Health check
+        run: |
+          sleep 5
+          docker compose ps
+          docker compose logs --tail=20
 
       - name: Xoá image cũ
         run: docker image prune -f

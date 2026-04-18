@@ -1,19 +1,29 @@
 services:
-  nginx:
-    image: nginx:1.27-alpine
+  traefik:
+    image: traefik:v3.3
     restart: unless-stopped
     ports:
       - "80:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/conf.d:/etc/traefik/conf.d:ro
+      - traefik-logs:/var/log/traefik
     networks:
       - proxy-net
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    command: >
-      /bin/sh -c "while :; do sleep 6h & wait $${!}; nginx -s reload; done
-      & nginx -g 'daemon off;'"
+    labels:
+      - "traefik.enable=true"
+      # Dashboard — truy cập qua traefik.miushop.io.vn (thêm DNS A record trỏ về server)
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.miushop.io.vn`)"
+      - "traefik.http.routers.dashboard.entrypoints=web"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=dashboard-ip@docker"
+      # Whitelist IP — chỉ cho phép IP của bạn truy cập dashboard
+      # Sửa YOUR_IP thành IP thực (VD: 1.2.3.4/32), hoặc xoá 2 label này nếu chưa cần
+      - "traefik.http.middlewares.dashboard-ip.ipallowlist.sourcerange=127.0.0.1/32,YOUR_IP/32"
+
+volumes:
+  traefik-logs:
 
 networks:
   proxy-net:

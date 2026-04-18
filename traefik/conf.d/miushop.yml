@@ -1,0 +1,69 @@
+# ── miushop.io.vn + api.miushop.io.vn ────────────────────────────────────────
+# File này hot-reload — không cần restart Traefik khi chỉnh sửa.
+# Thêm service mới: copy block router + service tương ứng, docker compose up -d
+
+http:
+  routers:
+
+    # ── Next.js static assets (cache immutable, ưu tiên cao hơn) ─────────────
+    miushop-static:
+      rule: "(Host(`miushop.io.vn`) || Host(`www.miushop.io.vn`)) && PathPrefix(`/_next/static/`)"
+      entryPoints: [web]
+      priority: 20
+      middlewares:
+        - cache-immutable@file
+        - sec-headers-web@file
+      service: miushop-frontend
+
+    # ── miushop.io.vn frontend ────────────────────────────────────────────────
+    miushop-frontend:
+      rule: "Host(`miushop.io.vn`) || Host(`www.miushop.io.vn`)"
+      entryPoints: [web]
+      priority: 10
+      middlewares:
+        - www-to-apex@file
+        - rate-web@file
+        - sec-headers-web@file
+        - limit-body@file
+      service: miushop-frontend
+
+    # ── api.miushop.io.vn backend ─────────────────────────────────────────────
+    miushop-api:
+      rule: "Host(`api.miushop.io.vn`) && PathPrefix(`/api/`)"
+      entryPoints: [web]
+      middlewares:
+        - rate-api@file
+        - sec-headers-api@file
+        - limit-body@file
+      service: miushop-api
+
+    # ── api.miushop.io.vn — drop mọi path khác /api/ ─────────────────────────
+    miushop-api-catch:
+      rule: "Host(`api.miushop.io.vn`)"
+      entryPoints: [web]
+      priority: 1
+      service: noop@internal   # trả về 404 ngay tại Traefik, không forward
+
+  services:
+
+    miushop-frontend:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://e-com-frontend-1:3000"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "5s"
+
+    miushop-api:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://e-com-api-1:3001"
+        healthCheck:
+          path: /api/health
+          interval: "10s"
+          timeout: "5s"
+        responseForwarding:
+          flushInterval: "100ms"

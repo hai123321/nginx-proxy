@@ -1,0 +1,69 @@
+# ── Shared Middlewares ────────────────────────────────────────────────────────
+# File này hot-reload — không cần restart Traefik khi chỉnh sửa.
+
+http:
+  middlewares:
+
+    # ── Rate limiting ──────────────────────────────────────────────────────────
+    rate-web:
+      rateLimit:
+        average: 30      # req/s trung bình
+        burst: 50        # cho phép burst ngắn
+
+    rate-api:
+      rateLimit:
+        average: 10
+        burst: 20
+
+    # ── Security headers ───────────────────────────────────────────────────────
+    sec-headers-web:
+      headers:
+        customResponseHeaders:
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "SAMEORIGIN"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+
+    sec-headers-api:
+      headers:
+        customResponseHeaders:
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "strict-origin-when-cross-origin"
+
+    # ── Redirect www → apex ────────────────────────────────────────────────────
+    www-to-apex:
+      redirectRegex:
+        regex: "^https?://www\\.miushop\\.io\\.vn(.*)"
+        replacement: "https://miushop.io.vn${1}"
+        permanent: true
+
+    # ── Cache headers cho Next.js static assets ────────────────────────────────
+    cache-immutable:
+      headers:
+        customResponseHeaders:
+          Cache-Control: "public, max-age=31536000, immutable"
+
+    # ── Block sensitive paths (.git, .env, ...) ────────────────────────────────
+    # Áp dụng toàn cục qua entrypoint trong traefik.yml
+    block-sensitive:
+      plugin: {}   # placeholder — xem ghi chú bên dưới
+
+    # ── Request body size 20MB (tương đương client_max_body_size) ─────────────
+    limit-body:
+      buffering:
+        maxRequestBodyBytes: 20971520   # 20 * 1024 * 1024
+
+# ── Ghi chú: block-sensitive ──────────────────────────────────────────────────
+# Traefik không có built-in block-by-path như nginx location.
+# Giải pháp: dùng Cloudflare WAF Rule (recommended vì CF đã ở phía trước):
+#
+#   CF Dashboard → Security → WAF → Create Rule:
+#   (http.request.uri.path matches "\.git" or
+#    http.request.uri.path matches "\.env" or
+#    http.request.uri.path matches "\.sql" or
+#    http.request.uri.path matches "\.log" or
+#    http.request.uri.path matches "\.pem" or
+#    http.request.uri.path matches "\.key")
+#   → Action: Block
+#
+# Hoặc dùng Traefik plugin "block-path" nếu muốn xử lý tại Traefik layer.

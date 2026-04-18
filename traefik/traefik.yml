@@ -1,0 +1,58 @@
+# ── Traefik Static Configuration ─────────────────────────────────────────────
+# Cloudflare terminates TLS — Traefik chỉ nhận HTTP từ Cloudflare edge.
+# Thay đổi file này yêu cầu restart container.
+# Thay đổi conf.d/*.yml được hot-reload tự động.
+
+api:
+  dashboard: true
+  insecure: false   # dashboard chỉ expose qua router được bảo vệ
+
+entryPoints:
+  web:
+    address: ":80"
+    # Trust Cloudflare edge IPs để lấy real client IP từ CF-Connecting-IP
+    forwardedHeaders:
+      trustedIPs:
+        - "103.21.244.0/22"
+        - "103.22.200.0/22"
+        - "103.31.4.0/22"
+        - "104.16.0.0/13"
+        - "104.24.0.0/14"
+        - "108.162.192.0/18"
+        - "131.0.72.0/22"
+        - "141.101.64.0/18"
+        - "162.158.0.0/15"
+        - "172.64.0.0/13"
+        - "173.245.48.0/20"
+        - "188.114.96.0/20"
+        - "190.93.240.0/20"
+        - "197.234.240.0/22"
+        - "198.41.128.0/17"
+    http:
+      middlewares:
+        - block-sensitive@file   # chặn .git, .env,... toàn cục
+
+providers:
+  # Docker provider: dùng cho Traefik dashboard label
+  docker:
+    exposedByDefault: false
+    network: proxy-net
+  # File provider: định nghĩa routes/services/middlewares qua file
+  file:
+    directory: /etc/traefik/conf.d
+    watch: true   # hot-reload khi file thay đổi, không cần restart
+
+log:
+  level: INFO
+  filePath: "/var/log/traefik/traefik.log"
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
+  fields:
+    headers:
+      defaultMode: drop
+      names:
+        CF-Connecting-IP: keep
+        User-Agent: keep
+        X-Forwarded-For: keep
