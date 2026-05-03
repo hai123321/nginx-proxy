@@ -29,7 +29,9 @@ jobs:
 
       - name: Deploy Traefik
         run: |
-          docker compose up -d --remove-orphans
+          # --force-recreate so changes in bind-mounted traefik.yml (static
+          # config) actually take effect; conf.d hot-reloads on its own.
+          docker compose up -d --remove-orphans --force-recreate
 
       - name: Health check
         run: |
