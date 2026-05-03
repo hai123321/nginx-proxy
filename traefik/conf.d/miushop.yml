@@ -61,9 +61,7 @@ http:
         passHostHeader: true
         servers:
           - url: "http://e-com-api-1:3001"
-        healthCheck:
-          path: /api/health
-          interval: "10s"
-          timeout: "5s"
+        # No active healthCheck: backend doesn't expose /api/health and the
+        # docker HEALTHCHECK on e-com-api-1 already gates container restarts.
         responseForwarding:
           flushInterval: "100ms"
