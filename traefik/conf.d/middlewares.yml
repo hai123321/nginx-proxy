@@ -43,11 +43,6 @@ http:
         customResponseHeaders:
           Cache-Control: "public, max-age=31536000, immutable"
 
-    # ── Block sensitive paths (.git, .env, ...) ────────────────────────────────
-    # Áp dụng toàn cục qua entrypoint trong traefik.yml
-    block-sensitive:
-      plugin: {}   # placeholder — xem ghi chú bên dưới
-
     # ── Request body size 20MB (tương đương client_max_body_size) ─────────────
     limit-body:
       buffering:

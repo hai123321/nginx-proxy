@@ -28,9 +28,9 @@ entryPoints:
         - "190.93.240.0/20"
         - "197.234.240.0/22"
         - "198.41.128.0/17"
-    http:
-      middlewares:
-        - block-sensitive@file   # chặn .git, .env,... toàn cục
+    # NOTE: block-sensitive paths (.git, .env, ...) handled at Cloudflare WAF.
+    # Do NOT reference middlewares here unless every middleware is fully defined,
+    # otherwise the whole entrypoint will 404 on every host.
 
 providers:
   # Docker provider: dùng cho Traefik dashboard label
