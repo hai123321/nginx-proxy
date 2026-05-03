@@ -6,7 +6,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, miu-server]
+    runs-on: [self-hosted, haitn3-nginx-proxy]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
         run: |
           docker run --rm \
             -v "$PWD/traefik/conf.d:/data:ro" \
-            mikefarah/yq:4 eval 'true' /data/middlewares.yml /data/miushop.yml
+            mikefarah/yq:4 eval 'true' /data/middlewares.yml /data/miushop.yml /data/card.yml
 
       - name: Deploy Traefik
         run: |
