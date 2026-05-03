@@ -8,6 +8,7 @@ Central reverse proxy cho tất cả services trên VPS.
 port 80/443 → nginx-proxy
                 ├── miushop.io.vn        → e-com frontend (port 3000)
                 ├── api.miushop.io.vn    → e-com api      (port 3001)
+                ├── card.miushop.io.vn   → miu-card-visit (port 3000)
                 ├── miuvis.miushop.io.vn → miuvis         (port 4000)
                 └── smartie.miushop.io.vn→ sa-smartie     (port 5000)
 ```

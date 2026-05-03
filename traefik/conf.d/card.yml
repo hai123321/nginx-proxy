@@ -1,0 +1,39 @@
+# ── card.miushop.io.vn ───────────────────────────────────────────────────────
+# Link-in-bio card visit (https://github.com/hai123321/miu-card-visit)
+# File hot-reload — không cần restart Traefik khi chỉnh sửa.
+
+http:
+  routers:
+
+    # ── Next.js static assets (cache immutable, ưu tiên cao hơn) ─────────────
+    card-static:
+      rule: "Host(`card.miushop.io.vn`) && PathPrefix(`/_next/static/`)"
+      entryPoints: [web]
+      priority: 20
+      middlewares:
+        - cache-immutable@file
+        - sec-headers-web@file
+      service: card-frontend
+
+    # ── card.miushop.io.vn frontend ──────────────────────────────────────────
+    card-frontend:
+      rule: "Host(`card.miushop.io.vn`)"
+      entryPoints: [web]
+      priority: 10
+      middlewares:
+        - rate-web@file
+        - sec-headers-web@file
+        - limit-body@file
+      service: card-frontend
+
+  services:
+
+    card-frontend:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://miu-card-visit:3000"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "5s"
