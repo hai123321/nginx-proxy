@@ -1,0 +1,31 @@
+# ── haitrieuai.com/app — Logia 3D static site ────────────────────────────────
+# Priority 15 > card-frontend (10) để /app được bắt trước khi fall-through sang Next.js
+
+http:
+  routers:
+    static-app:
+      rule: "(Host(`haitrieuai.com`) || Host(`www.haitrieuai.com`)) && PathPrefix(`/app`)"
+      entryPoints: [web]
+      priority: 15
+      middlewares:
+        - strip-app-prefix@file
+        - rate-web@file
+        - sec-headers-web@file
+      service: static-app-svc
+
+  middlewares:
+    strip-app-prefix:
+      stripPrefix:
+        prefixes:
+          - "/app"
+
+  services:
+    static-app-svc:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://static-app:80"
+        healthCheck:
+          path: /
+          interval: "10s"
+          timeout: "5s"

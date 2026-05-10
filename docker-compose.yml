@@ -22,6 +22,14 @@ services:
       # Sửa YOUR_IP thành IP thực (VD: 1.2.3.4/32), hoặc xoá 2 label này nếu chưa cần
       - "traefik.http.middlewares.dashboard-ip.ipallowlist.sourcerange=127.0.0.1/32,YOUR_IP/32"
 
+  static-app:
+    build: ./services/static-app
+    image: static-app:latest
+    container_name: static-app
+    restart: unless-stopped
+    networks:
+      - proxy-net
+
 volumes:
   traefik-logs:
 
