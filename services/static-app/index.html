@@ -197,20 +197,22 @@ scene.fog = new THREE.Fog(0xe8e2d0, 12, 25);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(5, 4, 5);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+const renderer = new THREE.WebGLRenderer({ antialias: !isMobile });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-renderer.shadowMap.enabled = true;
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
+renderer.shadowMap.enabled = !isMobile;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+scene.add(new THREE.AmbientLight(0xffffff, isMobile ? 0.85 : 0.55));
 
 const sunLight = new THREE.DirectionalLight(0xfff5e1, 1.1);
 sunLight.position.set(6, 8, 4);
-sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
+sunLight.castShadow = !isMobile;
+sunLight.shadow.mapSize.width = 1024;
+sunLight.shadow.mapSize.height = 1024;
 sunLight.shadow.camera.left = -8;
 sunLight.shadow.camera.right = 8;
 sunLight.shadow.camera.top = 8;
@@ -280,20 +282,16 @@ ceiling.position.set(0, H, 0);
 scene.add(ceiling);
 
 // ==== 3 CỤC NÓNG DAIKIN 9000 BTU TRÊN CAO ====
-// Kích thước thực Daikin 9000 BTU: 770mm × 545mm × 285mm (W×H×D)
-// Treo cao 2.5m (mép dưới), hướng quạt ra lan can (Z+)
 const acWidth = 0.77;
 const acHeight = 0.545;
 const acDepth = 0.285;
 const acBottomY = 2.5;
 const acCenterY = acBottomY + acHeight/2;
-const acZ = D/2 - acDepth/2 - 0.05;  // sát mép ngoài, hướng quạt ra ngoài
+const acZ = D/2 - acDepth/2 - 0.05;
 
-// 3 vị trí đặt: trái, giữa, phải (cách đều nhau)
 const acXPositions = [-L/2 + 0.45, 0, L/2 - 0.45];
 
 acXPositions.forEach((acX, idx) => {
-  // Thân cục nóng (vỏ nhôm trắng)
   const acBody = new THREE.Mesh(
     new THREE.BoxGeometry(acWidth, acHeight, acDepth),
     new THREE.MeshStandardMaterial({
@@ -306,7 +304,6 @@ acXPositions.forEach((acX, idx) => {
   acBody.castShadow = true;
   scene.add(acBody);
 
-  // Mặt lưới quạt (phía trước, hướng ra ngoài Z+)
   const acGrillMat = new THREE.MeshStandardMaterial({
     color: 0x444444,
     roughness: 0.8,
@@ -320,7 +317,6 @@ acXPositions.forEach((acX, idx) => {
   acGrill.position.set(acX, acCenterY, acZ + acDepth/2 + 0.001);
   scene.add(acGrill);
 
-  // Cánh quạt (visible qua lưới)
   for (let bladeIdx = 0; bladeIdx < 3; bladeIdx++) {
     const blade = new THREE.Mesh(
       new THREE.BoxGeometry(0.42, 0.04, 0.01),
@@ -331,7 +327,6 @@ acXPositions.forEach((acX, idx) => {
     scene.add(blade);
   }
 
-  // Lưới bảo vệ quạt (các nan thẳng đứng)
   for (let nanIdx = 0; nanIdx < 8; nanIdx++) {
     const nan = new THREE.Mesh(
       new THREE.BoxGeometry(0.008, 0.4, 0.005),
@@ -345,7 +340,6 @@ acXPositions.forEach((acX, idx) => {
     scene.add(nan);
   }
 
-  // Logo "DAIKIN" mặt trên
   const logoBg = new THREE.Mesh(
     new THREE.BoxGeometry(0.18, 0.04, 0.002),
     new THREE.MeshStandardMaterial({ color: 0x1a3a6e })
@@ -353,9 +347,7 @@ acXPositions.forEach((acX, idx) => {
   logoBg.position.set(acX, acBottomY + acHeight - 0.08, acZ + acDepth/2 - 0.001);
   scene.add(logoBg);
 
-  // Giá đỡ thép (bracket gắn tường)
   for (let dx of [-acWidth/2 + 0.08, acWidth/2 - 0.08]) {
-    // Brackets ngang (đỡ cục nóng)
     const bracketH = new THREE.Mesh(
       new THREE.BoxGeometry(0.04, 0.06, acDepth + 0.05),
       new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7 })
@@ -363,7 +355,6 @@ acXPositions.forEach((acX, idx) => {
     bracketH.position.set(acX + dx, acBottomY - 0.03, acZ);
     scene.add(bracketH);
 
-    // Brackets dọc (gắn lên trần/tường)
     const bracketV = new THREE.Mesh(
       new THREE.BoxGeometry(0.04, 0.45, 0.04),
       new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7 })
@@ -372,7 +363,6 @@ acXPositions.forEach((acX, idx) => {
     scene.add(bracketV);
   }
 
-  // Ống dẫn gas + nước thải (chạy sau cục nóng vào tường)
   const acPipe = new THREE.Mesh(
     new THREE.CylinderGeometry(0.025, 0.025, 0.5),
     new THREE.MeshStandardMaterial({ color: 0xdddddd })
@@ -380,8 +370,6 @@ acXPositions.forEach((acX, idx) => {
   acPipe.position.set(acX + 0.2, acBottomY + acHeight + 0.2, acZ - acDepth/2);
   scene.add(acPipe);
 
-  // === VÙNG GIÓ NÓNG (visualization) ===
-  // Hình nón mờ thể hiện luồng gió thoát ra
   const airflowMat = new THREE.MeshStandardMaterial({
     color: 0xffaa44,
     transparent: true,
@@ -418,7 +406,6 @@ rightSolidWall.position.set(L/2 - wallSideWidth/2, H/2, -D/2);
 rightSolidWall.receiveShadow = true;
 scene.add(rightSolidWall);
 
-// Cửa kính
 const topFrame = new THREE.Mesh(
   new THREE.BoxGeometry(doorAreaWidth, 0.12, 0.1),
   frameMat
@@ -490,7 +477,7 @@ const curtain = new THREE.Mesh(
 curtain.position.set(0, H/2, -D/2 - 0.08);
 scene.add(curtain);
 
-// ==== BỂ CÁ NANO (gắn vào tường đặc TRÁI, vị trí thấp 0.9m - TRÁNH cục nóng) ====
+// ==== BỂ CÁ NANO ====
 const aquariumWallX = -L/2 + wallSideWidth/2;
 const aquariumShelfY = 0.9;
 
@@ -535,31 +522,19 @@ const tankGlassMat = new THREE.MeshPhysicalMaterial({
   ior: 1.5
 });
 
-const tankFront = new THREE.Mesh(
-  new THREE.BoxGeometry(tankWidth, tankHeight, 0.005),
-  tankGlassMat
-);
+const tankFront = new THREE.Mesh(new THREE.BoxGeometry(tankWidth, tankHeight, 0.005), tankGlassMat);
 tankFront.position.set(aquariumWallX, tankCenterY, tankZ + tankDepth/2);
 scene.add(tankFront);
 
-const tankBack = new THREE.Mesh(
-  new THREE.BoxGeometry(tankWidth, tankHeight, 0.005),
-  tankGlassMat
-);
+const tankBack = new THREE.Mesh(new THREE.BoxGeometry(tankWidth, tankHeight, 0.005), tankGlassMat);
 tankBack.position.set(aquariumWallX, tankCenterY, tankZ - tankDepth/2);
 scene.add(tankBack);
 
-const tankLeft = new THREE.Mesh(
-  new THREE.BoxGeometry(0.005, tankHeight, tankDepth),
-  tankGlassMat
-);
+const tankLeft = new THREE.Mesh(new THREE.BoxGeometry(0.005, tankHeight, tankDepth), tankGlassMat);
 tankLeft.position.set(aquariumWallX - tankWidth/2, tankCenterY, tankZ);
 scene.add(tankLeft);
 
-const tankRight = new THREE.Mesh(
-  new THREE.BoxGeometry(0.005, tankHeight, tankDepth),
-  tankGlassMat
-);
+const tankRight = new THREE.Mesh(new THREE.BoxGeometry(0.005, tankHeight, tankDepth), tankGlassMat);
 tankRight.position.set(aquariumWallX + tankWidth/2, tankCenterY, tankZ);
 scene.add(tankRight);
 
@@ -654,11 +629,7 @@ for (let i = 0; i < 5; i++) {
 
 const tankLight = new THREE.Mesh(
   new THREE.BoxGeometry(tankWidth - 0.04, 0.025, 0.06),
-  new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    emissive: 0xfff5e1,
-    emissiveIntensity: 0.7
-  })
+  new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff5e1, emissiveIntensity: 0.7 })
 );
 tankLight.position.set(aquariumWallX, tankCenterY + tankHeight/2 + 0.018, tankZ);
 scene.add(tankLight);
@@ -674,7 +645,7 @@ const tankPointLight = new THREE.PointLight(0x6fa8e8, 0.5, 1.5);
 tankPointLight.position.set(aquariumWallX, tankCenterY, tankZ + 0.1);
 scene.add(tankPointLight);
 
-// ==== KỆ TƯỜNG PHẢI (giới hạn cao 1.85m, không gần cục nóng) ====
+// ==== KỆ TƯỜNG PHẢI ====
 const shelfMat = new THREE.MeshStandardMaterial({ color: 0x9c7a4d, roughness: 0.6 });
 const rightShelfX = L/2 - wallSideWidth/2;
 const shelfHeights = [0.5, 0.95, 1.4, 1.85];
@@ -734,10 +705,10 @@ basket.position.set(rightShelfX, 1.93, -D/2 + 0.14);
 basket.castShadow = true;
 scene.add(basket);
 
-// ==== SAFETY NET (chỉ tới cao 2.4m, để hở phía trên cho cục nóng thoát nhiệt) ====
+// ==== SAFETY NET ====
 const cableGroup = new THREE.Group();
 const cableMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.3 });
-const netHeight = 2.4;  // Chỉ tới 2.4m, không che cục nóng
+const netHeight = 2.4;
 
 for (let x = -L/2 + 0.08; x <= L/2 - 0.08; x += 0.08) {
   const cable = new THREE.Mesh(
@@ -763,7 +734,6 @@ cableGroup.add(handRail);
 
 scene.add(cableGroup);
 
-// Lưới chống muỗi (chỉ tới 2.4m)
 const screen = new THREE.Mesh(
   new THREE.PlaneGeometry(L, netHeight - 0.25),
   new THREE.MeshStandardMaterial({
@@ -788,18 +758,12 @@ scene.add(portableDesk);
 
 const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.5 });
 for (let dx of [-0.3, 0.3]) {
-  const leg1 = new THREE.Mesh(
-    new THREE.BoxGeometry(0.025, 0.55, 0.025),
-    legMat
-  );
+  const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.55, 0.025), legMat);
   leg1.position.set(dx, 0.24, 0.15);
   leg1.rotation.x = 0.2;
   scene.add(leg1);
 
-  const leg2 = new THREE.Mesh(
-    new THREE.BoxGeometry(0.025, 0.55, 0.025),
-    legMat
-  );
+  const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.55, 0.025), legMat);
   leg2.position.set(dx, 0.24, 0.15);
   leg2.rotation.x = -0.2;
   scene.add(leg2);
@@ -855,25 +819,19 @@ scene.add(drainPipe);
 
 const rackMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.5 });
 for (let i = 0; i < 4; i++) {
-  const shelf = new THREE.Mesh(
-    new THREE.BoxGeometry(0.4, 0.02, 0.2),
-    rackMat
-  );
+  const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.2), rackMat);
   shelf.position.set(L/2 - 0.25, 0.1 + i * 0.18, -0.2);
   scene.add(shelf);
 }
 for (let dx of [-0.18, 0.18]) {
   for (let dz of [-0.08, 0.08]) {
-    const post = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.008, 0.008, 0.7),
-      rackMat
-    );
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.7), rackMat);
     post.position.set(L/2 - 0.25 + dx, 0.35, -0.2 + dz);
     scene.add(post);
   }
 }
 
-// ==== CÂY XANH (chịu khô gió, không có tầng 2m gần cục nóng) ====
+// ==== CÂY XANH ====
 function createSnakePlant(x, y, z) {
   const group = new THREE.Group();
   const pot = new THREE.Mesh(
@@ -916,10 +874,7 @@ function createAloe(x, y, z, potColor = 0xc9603e) {
   const leafMat = new THREE.MeshStandardMaterial({ color: 0x6b9b3e, roughness: 0.5 });
   for (let i = 0; i < 8; i++) {
     const angle = (i / 8) * Math.PI * 2;
-    const leaf = new THREE.Mesh(
-      new THREE.ConeGeometry(0.035, 0.32, 4),
-      leafMat
-    );
+    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.32, 4), leafMat);
     leaf.position.set(Math.cos(angle) * 0.07, 0.3, Math.sin(angle) * 0.07);
     leaf.rotation.z = Math.cos(angle) * 0.4;
     leaf.rotation.x = Math.sin(angle) * 0.4;
@@ -973,10 +928,7 @@ function createZZPlant(x, y, z) {
   for (let i = 0; i < 5; i++) {
     const angle = (i / 5) * Math.PI * 2;
     for (let s = 0; s < 6; s++) {
-      const leafPair = new THREE.Mesh(
-        new THREE.SphereGeometry(0.045, 8, 6),
-        leafMat
-      );
+      const leafPair = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), leafMat);
       leafPair.scale.set(1, 0.4, 1.5);
       leafPair.position.set(
         Math.cos(angle) * (0.09 + s * 0.025),
@@ -991,37 +943,28 @@ function createZZPlant(x, y, z) {
   return group;
 }
 
-// Cây treo trên lan can (CHỈ tầng 1, độ cao 95cm - dưới vùng nhiệt)
 scene.add(createSnakePlant(-0.9, 0.95, D/2 - 0.12));
 scene.add(createAloe(-0.4, 0.95, D/2 - 0.12));
 scene.add(createHerbs(0.1, 0.95, D/2 - 0.12, 0xb89968));
 scene.add(createHerbs(0.6, 0.95, D/2 - 0.12, 0xc9603e));
 scene.add(createSnakePlant(1.1, 0.95, D/2 - 0.12));
 
-// Cây sàn ở góc trống
 scene.add(createZZPlant(-L/2 + 0.25, 0, D/2 - 0.22));
 scene.add(createAloe(L/2 - 0.6, 0.05, D/2 - 0.25, 0xfaf5ea));
 
 // ==== AISLE INDICATOR ====
 const aisle = new THREE.Mesh(
   new THREE.PlaneGeometry(L - 0.8, 0.4),
-  new THREE.MeshStandardMaterial({
-    color: 0x4a7c2e,
-    transparent: true,
-    opacity: 0.08,
-    side: THREE.DoubleSide
-  })
+  new THREE.MeshStandardMaterial({ color: 0x4a7c2e, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
 );
 aisle.rotation.x = -Math.PI / 2;
 aisle.position.set(0, 0.06, -0.05);
 scene.add(aisle);
 
-// ==== AXIS HELPER ====
 const axesHelper = new THREE.AxesHelper(0.4);
 axesHelper.position.set(-L/2 + 0.05, 0.1, -D/2 + 0.05);
 scene.add(axesHelper);
 
-// ==== GROUND ====
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(40, 40),
   new THREE.MeshStandardMaterial({ color: 0xc4ccd4 })
@@ -1068,10 +1011,8 @@ window.setView = function(view) {
     progress += 0.04;
     if (progress >= 1) progress = 1;
     const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
     camera.position.lerpVectors(startPos, endPos, ease);
     controls.target.lerpVectors(startTarget, endTarget, ease);
-
     if (progress < 1) requestAnimationFrame(tween);
   }
   tween();
