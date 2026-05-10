@@ -48,6 +48,20 @@ http:
       buffering:
         maxRequestBodyBytes: 20971520   # 20 * 1024 * 1024
 
+    # ── Request body size 25MB cho voice/photo upload (brain-api) ────────────
+    limit-body-25m:
+      buffering:
+        maxRequestBodyBytes: 26214400   # 25 * 1024 * 1024
+
+    # ── Security headers cho private API (no public indexing) ────────────────
+    sec-headers-private:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow"
+          X-Content-Type-Options: "nosniff"
+          X-Frame-Options: "DENY"
+          Referrer-Policy: "no-referrer"
+
 # ── Ghi chú: block-sensitive ──────────────────────────────────────────────────
 # Traefik không có built-in block-by-path như nginx location.
 # Giải pháp: dùng Cloudflare WAF Rule (recommended vì CF đã ở phía trước):
