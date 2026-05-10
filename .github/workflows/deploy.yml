@@ -29,7 +29,8 @@ jobs:
               /data/middlewares.yml \
               /data/miushop.yml \
               /data/card.yml \
-              /data/brain-api.yml
+              /data/brain-api.yml \
+              /data/static-app.yml
 
       - name: Deploy Traefik
         run: |
