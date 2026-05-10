@@ -37,6 +37,12 @@ http:
         replacement: "https://miushop.io.vn${1}"
         permanent: true
 
+    www-to-apex-haitrieuai:
+      redirectRegex:
+        regex: "^https?://www\\.haitrieuai\\.com(.*)"
+        replacement: "https://haitrieuai.com${1}"
+        permanent: true
+
     # ── Cache headers cho Next.js static assets ────────────────────────────────
     cache-immutable:
       headers:

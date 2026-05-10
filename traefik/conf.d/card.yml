@@ -1,13 +1,14 @@
-# ── card.miushop.io.vn ───────────────────────────────────────────────────────
+# ── card.miushop.io.vn + haitrieuai.com ──────────────────────────────────────
 # Link-in-bio card visit (https://github.com/hai123321/miu-card-visit)
-# File hot-reload — không cần restart Traefik khi chỉnh sửa.
+# Cả hai domain cùng route về `miu-card-visit:3000` để giai đoạn chuyển sang
+# `haitrieuai.com` không gãy link cũ. File hot-reload — không cần restart Traefik.
 
 http:
   routers:
 
     # ── Next.js static assets (cache immutable, ưu tiên cao hơn) ─────────────
     card-static:
-      rule: "Host(`card.miushop.io.vn`) && PathPrefix(`/_next/static/`)"
+      rule: "(Host(`card.miushop.io.vn`) || Host(`haitrieuai.com`) || Host(`www.haitrieuai.com`)) && PathPrefix(`/_next/static/`)"
       entryPoints: [web]
       priority: 20
       middlewares:
@@ -15,12 +16,13 @@ http:
         - sec-headers-web@file
       service: card-frontend
 
-    # ── card.miushop.io.vn frontend ──────────────────────────────────────────
+    # ── card frontend (apex + alias) ─────────────────────────────────────────
     card-frontend:
-      rule: "Host(`card.miushop.io.vn`)"
+      rule: "Host(`card.miushop.io.vn`) || Host(`haitrieuai.com`) || Host(`www.haitrieuai.com`)"
       entryPoints: [web]
       priority: 10
       middlewares:
+        - www-to-apex-haitrieuai@file
         - rate-web@file
         - sec-headers-web@file
         - limit-body@file
