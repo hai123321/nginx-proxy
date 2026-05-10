@@ -1,0 +1,60 @@
+# ── brain-api.miushop.io.vn ──────────────────────────────────────────────────
+# Capture backend cho secondBrain (https://github.com/hai123321/miu-brain-api)
+# Nhận request từ iPhone Siri Shortcut + Telegram bot webhook + curl smoke
+# tests. File hot-reload — không cần restart Traefik khi chỉnh sửa.
+
+http:
+  routers:
+
+    # ── Public health endpoint (no rate limit, no auth) ──────────────────────
+    brain-api-health:
+      rule: "Host(`brain-api.miushop.io.vn`) && Path(`/health`)"
+      entryPoints: [web]
+      priority: 30
+      middlewares:
+        - sec-headers-api@file
+      service: brain-api
+
+    # ── Telegram webhook (cao priority, no rate limit vì Telegram batch) ────
+    brain-api-telegram:
+      rule: "Host(`brain-api.miushop.io.vn`) && PathPrefix(`/telegram/`)"
+      entryPoints: [web]
+      priority: 20
+      middlewares:
+        - sec-headers-private@file
+        - limit-body-25m@file
+      service: brain-api
+
+    # ── Capture endpoints (POST text/voice/photo) ────────────────────────────
+    brain-api-capture:
+      rule: "Host(`brain-api.miushop.io.vn`) && PathPrefix(`/capture/`)"
+      entryPoints: [web]
+      priority: 15
+      middlewares:
+        - rate-api@file
+        - sec-headers-private@file
+        - limit-body-25m@file
+      service: brain-api
+
+    # ── Catch-all: trả 404 ngay tại Traefik cho các path khác ────────────────
+    brain-api-catch:
+      rule: "Host(`brain-api.miushop.io.vn`)"
+      entryPoints: [web]
+      priority: 1
+      service: noop@internal
+
+  services:
+
+    brain-api:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          - url: "http://miu-brain-api:3000"
+        healthCheck:
+          path: /health
+          interval: "15s"
+          timeout: "5s"
+        responseForwarding:
+          # Streaming Whisper response không tối ưu nhưng flushInterval thấp
+          # giúp Telegram bot không bị timeout khi transcribe lâu
+          flushInterval: "200ms"
