@@ -12,6 +12,8 @@ DOMAINS=(
     "smartie.miushop.io.vn"
     "router.miushop.io.vn"
     "openclaw.miushop.io.vn"
+    "haitrieuai.com"
+    "www.haitrieuai.com"
 )
 EMAIL="your-email@gmail.com"   # ← đổi thành email thật
 
