@@ -1,1022 +1,330 @@
 <!DOCTYPE html>
-
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Logia 3D Final v5 — Với 3 cục nóng Daikin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I am Iron Man</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: -apple-system, sans-serif;
-    background: #1a1a1a;
-    color: #fff;
-    overflow: hidden;
-  }
-  #info {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: rgba(0,0,0,0.78);
-    padding: 16px 20px;
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
-    z-index: 10;
-    max-width: 360px;
-    font-size: 13px;
-    line-height: 1.6;
-  }
-  #info h1 {
-    font-size: 16px;
-    margin-bottom: 8px;
-    color: #4a7c2e;
-  }
-  #info .dim {
-    color: #b8893a;
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-  }
-  #info .key {
-    color: #fff;
-    background: rgba(74, 124, 46, 0.25);
-    padding: 6px 10px;
-    border-radius: 4px;
-    margin-top: 8px;
-    border-left: 3px solid #4a7c2e;
-    font-size: 12px;
-  }
-  #info .warn {
-    color: #fff;
-    background: rgba(201, 96, 62, 0.25);
-    padding: 6px 10px;
-    border-radius: 4px;
-    margin-top: 6px;
-    border-left: 3px solid #c9603e;
-    font-size: 12px;
-  }
-  #info .controls {
-    color: rgba(255,255,255,0.6);
-    font-size: 11px;
-    margin-top: 8px;
-  }
-  #legend {
-    position: absolute;
-    bottom: 20px;
-    left: 20px;
-    background: rgba(0,0,0,0.78);
-    padding: 14px 18px;
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
-    z-index: 10;
-    font-size: 12px;
-  }
-  #legend .item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 4px 0;
-  }
-  #legend .dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 3px;
-  }
-  #views {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.78);
-    padding: 12px;
-    border-radius: 8px;
-    backdrop-filter: blur(10px);
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  #views button {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 8px 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: background 0.2s;
-  }
-  #views button:hover { background: rgba(255,255,255,0.2); }
-  #views button.active {
-    background: #4a7c2e;
-    border-color: #4a7c2e;
-  }
-  canvas { display: block; }
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-#notes {
-position: absolute;
-bottom: 20px;
-right: 20px;
-background: rgba(201, 96, 62, 0.9);
-padding: 12px 16px;
-border-radius: 8px;
-z-index: 10;
-font-size: 11px;
-max-width: 290px;
-line-height: 1.5;
+body {
+  background: #000;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+  user-select: none;
+}
+
+canvas#bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.scene {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(24px, 5vw, 48px);
+  padding: 20px;
+}
+
+/* ── MASK ── */
+.mask-wrap {
+  filter: drop-shadow(0 0 40px rgba(180, 0, 0, 0.6))
+          drop-shadow(0 0 80px rgba(120, 0, 0, 0.3));
+  animation: maskFloat 4s ease-in-out infinite;
+}
+
+@keyframes maskFloat {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+svg.mask {
+  width: min(260px, 62vw);
+  height: auto;
+}
+
+/* eyes */
+@keyframes eyeFlicker {
+  0%, 92%, 96%, 100% { opacity: 1; }
+  94%                 { opacity: 0.4; }
+}
+
+@keyframes eyePulse {
+  0%, 100% { filter: drop-shadow(0 0 6px #fff) drop-shadow(0 0 18px #4fc3f7) drop-shadow(0 0 30px #0277bd); }
+  50%       { filter: drop-shadow(0 0 14px #fff) drop-shadow(0 0 36px #4fc3f7) drop-shadow(0 0 60px #01579b); }
+}
+
+.eye {
+  animation: eyePulse 2s ease-in-out infinite, eyeFlicker 7s ease-in-out infinite;
+}
+.eye.r { animation-delay: 0.08s, 0.3s; }
+
+/* arc reactor */
+@keyframes reactorGlow {
+  0%, 100% { filter: drop-shadow(0 0 8px #4fc3f7) drop-shadow(0 0 20px #0288d1); opacity: 0.85; }
+  50%       { filter: drop-shadow(0 0 18px #80d8ff) drop-shadow(0 0 45px #0288d1) drop-shadow(0 0 70px #4fc3f7); opacity: 1; }
+}
+@keyframes reactorSpin {
+  to { transform: rotate(360deg); }
+}
+
+.reactor-glow { animation: reactorGlow 1.8s ease-in-out infinite; }
+.reactor-ring { animation: reactorSpin 3s linear infinite; transform-origin: 150px 318px; }
+
+/* ── TEXT ── */
+.text-block { text-align: center; }
+
+.subtitle {
+  color: #ef5350;
+  font-size: clamp(10px, 2.8vw, 15px);
+  letter-spacing: 0.55em;
+  text-transform: uppercase;
+  font-weight: 700;
+  text-shadow: 0 0 12px rgba(239,83,80,0.9), 0 0 30px rgba(183,28,28,0.5);
+  margin-bottom: 10px;
+  animation: subtitlePulse 3s ease-in-out infinite;
+}
+
+@keyframes subtitlePulse {
+  0%, 100% { opacity: 0.8; }
+  50%       { opacity: 1; }
+}
+
+.title {
+  color: #fff;
+  font-size: clamp(36px, 11vw, 80px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 30px rgba(255,255,255,0.25), 0 3px 6px rgba(0,0,0,0.9);
+}
+
+.title .red {
+  color: #ef5350;
+  text-shadow: 0 0 20px rgba(239,83,80,0.7), 0 0 50px rgba(183,28,28,0.4);
+}
+
+/* ── HUD overlay ── */
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hud-corner {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border-color: rgba(239,83,80,0.35);
+  border-style: solid;
+}
+.hud-corner.tl { top: 18px; left: 18px; border-width: 2px 0 0 2px; }
+.hud-corner.tr { top: 18px; right: 18px; border-width: 2px 2px 0 0; }
+.hud-corner.bl { bottom: 18px; left: 18px; border-width: 0 0 2px 2px; }
+.hud-corner.br { bottom: 18px; right: 18px; border-width: 0 2px 2px 0; }
+
+.hud-scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(79,195,247,0.5) 30%, rgba(79,195,247,0.9) 50%, rgba(79,195,247,0.5) 70%, transparent);
+  animation: hudScan 6s linear infinite;
+}
+@keyframes hudScan {
+  0%   { top: 0; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 0.8; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.hud-label {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(239,83,80,0.4);
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  font-family: monospace;
+  white-space: nowrap;
 }
 </style>
-
 </head>
 <body>
 
-<div id="info">
-  <h1>Logia 3D — Với điều hòa</h1>
-  <div>3 cục nóng <strong>Daikin 9000 BTU</strong> treo cao 2.5m, hướng quạt ra lan can.</div>
-  <div class="key">
-    ✓ Đồ đạc giới hạn cao 1.8m<br>
-    ✓ Bể cá tránh xa cục nóng<br>
-    ✓ Cây chịu khô gió ở tầng cao
-  </div>
-  <div class="warn">
-    ⚠ Vùng nhiệt: cây buông rủ ở 2m đã bỏ
-  </div>
-  <div class="dim">
-    LOGIA: 0.9m × 3m × 3m<br>
-    CỤC NÓNG: 78cm × 54cm × 28cm, treo 2.5m
-  </div>
-  <div class="controls">
-    🖱️ Kéo: xoay · Cuộn: zoom
-  </div>
+<canvas id="bg"></canvas>
+
+<div class="hud">
+  <div class="hud-corner tl"></div>
+  <div class="hud-corner tr"></div>
+  <div class="hud-corner bl"></div>
+  <div class="hud-corner br"></div>
+  <div class="hud-scan"></div>
+  <div class="hud-label">STARK INDUSTRIES &nbsp;·&nbsp; MARK L &nbsp;·&nbsp; SYSTEM ONLINE</div>
 </div>
 
-<div id="views">
-  <button onclick="setView('iso')" class="active">Isometric</button>
-  <button onclick="setView('top')">Top View</button>
-  <button onclick="setView('front')">Front View</button>
-  <button onclick="setView('ac')">Cục nóng Close-up</button>
-  <button onclick="setView('aquarium')">Bể cá Close-up</button>
+<div class="scene">
+
+  <div class="mask-wrap">
+    <svg class="mask" viewBox="0 0 300 360" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="gFace" cx="50%" cy="38%" r="58%">
+          <stop offset="0%" stop-color="#e53935"/>
+          <stop offset="75%" stop-color="#b71c1c"/>
+          <stop offset="100%" stop-color="#6a0000"/>
+        </radialGradient>
+        <radialGradient id="gSide" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#c62828"/>
+          <stop offset="100%" stop-color="#7f0000"/>
+        </radialGradient>
+        <radialGradient id="gEye" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="50%" stop-color="#b3e5fc"/>
+          <stop offset="100%" stop-color="#0288d1"/>
+        </radialGradient>
+        <radialGradient id="gReactor" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#e3f2fd"/>
+          <stop offset="45%" stop-color="#4fc3f7"/>
+          <stop offset="100%" stop-color="#0277bd"/>
+        </radialGradient>
+        <filter id="fEye" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="fReactor" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- ── OUTER SHELL ── -->
+      <path d="M150 4 L245 46 L278 128 L270 225 L232 300 L150 348 L68 300 L30 225 L22 128 L55 46 Z"
+            fill="url(#gFace)" stroke="#3a0000" stroke-width="1.5"/>
+
+      <!-- ── FOREHEAD ── -->
+      <path d="M150 4 L205 36 L200 72 L150 82 L100 72 L95 36 Z"
+            fill="#c62828" stroke="#8b0000" stroke-width="1"/>
+      <line x1="150" y1="4" x2="150" y2="82" stroke="#8b0000" stroke-width="2.5"/>
+      <path d="M108 52 L150 42 L192 52" stroke="#f9a825" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+      <!-- ── TEMPLES ── -->
+      <path d="M55 46 L95 36 L100 72 L72 108 L45 120 Z"  fill="#b71c1c" stroke="#7f0000" stroke-width="1"/>
+      <path d="M245 46 L205 36 L200 72 L228 108 L255 120 Z" fill="#b71c1c" stroke="#7f0000" stroke-width="1"/>
+
+      <!-- ── CHEEKS ── -->
+      <path d="M22 128 L45 120 L72 108 L82 168 L65 215 L30 225 Z"
+            fill="url(#gSide)" stroke="#7f0000" stroke-width="1"/>
+      <path d="M278 128 L255 120 L228 108 L218 168 L235 215 L270 225 Z"
+            fill="url(#gSide)" stroke="#7f0000" stroke-width="1"/>
+
+      <!-- ── LOWER FACE ── -->
+      <path d="M30 225 L65 215 L82 168 L218 168 L235 215 L270 225 L232 300 L150 348 L68 300 Z"
+            fill="url(#gFace)" stroke="#6a0000" stroke-width="1"/>
+
+      <!-- ── EYE SOCKETS ── -->
+      <path d="M80 120 L140 104 L148 130 L133 155 L80 152 Z" fill="#150000"/>
+      <path d="M220 120 L160 104 L152 130 L167 155 L220 152 Z" fill="#150000"/>
+
+      <!-- ── EYE SLITS ── -->
+      <path class="eye l" d="M83 124 L137 109 L144 132 L129 151 L83 148 Z"
+            fill="url(#gEye)" filter="url(#fEye)"/>
+      <path class="eye r" d="M217 124 L163 109 L156 132 L171 151 L217 148 Z"
+            fill="url(#gEye)" filter="url(#fEye)"/>
+
+      <!-- ── NOSE GUARD ── -->
+      <path d="M142 155 L158 155 L162 188 L155 200 L145 200 L138 188 Z"
+            fill="#8b0000" stroke="#5a0000" stroke-width="1"/>
+
+      <!-- ── MOUTH PANEL ── -->
+      <path d="M95 215 L205 215 L214 252 L202 282 L150 300 L98 282 L86 252 Z"
+            fill="#c62828" stroke="#7f0000" stroke-width="1"/>
+      <line x1="108" y1="228" x2="192" y2="228" stroke="#7f0000" stroke-width="1.5"/>
+      <line x1="106" y1="241" x2="194" y2="241" stroke="#7f0000" stroke-width="1.5"/>
+      <line x1="109" y1="254" x2="191" y2="254" stroke="#7f0000" stroke-width="1.5"/>
+      <line x1="113" y1="267" x2="187" y2="267" stroke="#7f0000" stroke-width="1.2"/>
+
+      <!-- ── GOLD ACCENTS ── -->
+      <path d="M65 215 L82 168 L90 200 L86 252" stroke="#f9a825" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M235 215 L218 168 L210 200 L214 252" stroke="#f9a825" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <path d="M102 285 L150 298 L198 285" stroke="#f9a825" stroke-width="2" fill="none" stroke-linecap="round"/>
+
+      <!-- ── ARC REACTOR ── -->
+      <g class="reactor-glow" filter="url(#fReactor)">
+        <circle cx="150" cy="318" r="16" fill="none" stroke="#0288d1" stroke-width="1.5" opacity="0.7"/>
+        <circle cx="150" cy="318" r="10" fill="url(#gReactor)" opacity="0.95"/>
+        <circle cx="150" cy="318" r="4" fill="#e3f2fd"/>
+      </g>
+      <g class="reactor-ring">
+        <rect x="149" y="299" width="2" height="5" rx="1" fill="#4fc3f7" opacity="0.9"/>
+        <rect x="149" y="332" width="2" height="5" rx="1" fill="#4fc3f7" opacity="0.9"/>
+        <rect x="132" y="317" width="5" height="2" rx="1" fill="#4fc3f7" opacity="0.9"/>
+        <rect x="163" y="317" width="5" height="2" rx="1" fill="#4fc3f7" opacity="0.9"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="text-block">
+    <div class="subtitle">Tony Stark</div>
+    <div class="title">I&nbsp;am <span class="red">Iron</span><br>Man</div>
+  </div>
+
 </div>
 
-<div id="legend">
-  <div class="item"><div class="dot" style="background:#cccccc"></div>Cục nóng Daikin × 3 (trên cao)</div>
-  <div class="item"><div class="dot" style="background:#aad6ee;opacity:0.5"></div>Cửa kính 2 cánh × 1m</div>
-  <div class="item"><div class="dot" style="background:#faf5ea"></div>Tường đặc 2×0.5m</div>
-  <div class="item"><div class="dot" style="background:#6fa8b8"></div>Bể cá nano</div>
-  <div class="item"><div class="dot" style="background:#9c7a4d"></div>Kệ tường + bệ ngồi</div>
-  <div class="item"><div class="dot" style="background:#c9603e"></div>Bàn xếp di động</div>
-  <div class="item"><div class="dot" style="background:#4a7c2e"></div>Cây xanh chịu khô</div>
-</div>
+<script>
+const canvas = document.getElementById('bg');
+const ctx = canvas.getContext('2d');
 
-<div id="notes">
-  <strong>⚠ Lưu ý nhiệt:</strong> 3 cục Daikin 9000 BTU tỏa nhiều nhiệt. Đồ đạc + cây + bể cá đã được bố trí TRÁNH vùng nhiệt phía dưới quạt. Lưới chống muỗi không che vùng cục nóng.
-</div>
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
-</script>
+resize();
+window.addEventListener('resize', resize);
 
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const particles = Array.from({ length: 55 }, () => ({
+  x: Math.random() * window.innerWidth,
+  y: Math.random() * window.innerHeight,
+  r: Math.random() * 1.4 + 0.3,
+  vx: (Math.random() - 0.5) * 0.25,
+  vy: (Math.random() - 0.5) * 0.25,
+  alpha: Math.random() * 0.45 + 0.1,
+  hue: Math.random() > 0.65 ? 200 : 0
+}));
 
-// ==== DIMENSIONS ====
-const L = 3.0;
-const D = 0.9;
-const H = 3.0;
-
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xe8e2d0);
-scene.fog = new THREE.Fog(0xe8e2d0, 12, 25);
-
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(5, 4, 5);
-
-const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
-
-const renderer = new THREE.WebGLRenderer({ antialias: !isMobile });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
-renderer.shadowMap.enabled = !isMobile;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
-
-scene.add(new THREE.AmbientLight(0xffffff, isMobile ? 0.85 : 0.55));
-
-const sunLight = new THREE.DirectionalLight(0xfff5e1, 1.1);
-sunLight.position.set(6, 8, 4);
-sunLight.castShadow = !isMobile;
-sunLight.shadow.mapSize.width = 1024;
-sunLight.shadow.mapSize.height = 1024;
-sunLight.shadow.camera.left = -8;
-sunLight.shadow.camera.right = 8;
-sunLight.shadow.camera.top = 8;
-sunLight.shadow.camera.bottom = -8;
-scene.add(sunLight);
-
-const fillLight = new THREE.DirectionalLight(0xb8d4f0, 0.4);
-fillLight.position.set(-4, 4, -3);
-scene.add(fillLight);
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.target.set(0, 1.2, 0);
-
-// ==== FLOOR ====
-const floor = new THREE.Mesh(
-  new THREE.BoxGeometry(L, 0.05, D),
-  new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.9 })
-);
-floor.position.set(0, 0, 0);
-floor.receiveShadow = true;
-scene.add(floor);
-
-function createWPCFloor() {
-  const group = new THREE.Group();
-  const tileSize = 0.3;
-  const cols = Math.floor(L / tileSize);
-  const rows = Math.floor(D / tileSize);
-  const colors = [0xc9a876, 0xb89865, 0xa88857];
-
-  for (let i = 0; i < cols; i++) {
-    for (let j = 0; j < rows; j++) {
-      const tile = new THREE.Mesh(
-        new THREE.BoxGeometry(tileSize - 0.01, 0.03, tileSize - 0.01),
-        new THREE.MeshStandardMaterial({ color: colors[(i + j) % 3], roughness: 0.7 })
-      );
-      tile.position.set(
-        -L/2 + tileSize/2 + i * tileSize,
-        0.04,
-        -D/2 + tileSize/2 + j * tileSize
-      );
-      tile.receiveShadow = true;
-      group.add(tile);
-    }
+function tick() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.hue === 0 ? `rgba(239,83,80,${p.alpha})` : `rgba(79,195,247,${p.alpha})`;
+    ctx.fill();
   }
-  return group;
+  requestAnimationFrame(tick);
 }
-scene.add(createWPCFloor());
+tick();
 
-const wallMat = new THREE.MeshStandardMaterial({ color: 0xfaf5ea, roughness: 0.9 });
-
-// Side walls (đầu hồi)
-const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.08, H, D), wallMat);
-leftWall.position.set(-L/2, H/2, 0);
-leftWall.receiveShadow = true;
-scene.add(leftWall);
-
-const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.08, H, D), wallMat);
-rightWall.position.set(L/2, H/2, 0);
-rightWall.receiveShadow = true;
-scene.add(rightWall);
-
-// Ceiling
-const ceiling = new THREE.Mesh(new THREE.BoxGeometry(L, 0.1, D), wallMat);
-ceiling.position.set(0, H, 0);
-scene.add(ceiling);
-
-// ==== 3 CỤC NÓNG DAIKIN 9000 BTU TRÊN CAO ====
-const acWidth = 0.77;
-const acHeight = 0.545;
-const acDepth = 0.285;
-const acBottomY = 2.5;
-const acCenterY = acBottomY + acHeight/2;
-const acZ = D/2 - acDepth/2 - 0.05;
-
-const acXPositions = [-L/2 + 0.45, 0, L/2 - 0.45];
-
-acXPositions.forEach((acX, idx) => {
-  const acBody = new THREE.Mesh(
-    new THREE.BoxGeometry(acWidth, acHeight, acDepth),
-    new THREE.MeshStandardMaterial({
-      color: 0xeeeeee,
-      roughness: 0.6,
-      metalness: 0.3
-    })
-  );
-  acBody.position.set(acX, acCenterY, acZ);
-  acBody.castShadow = true;
-  scene.add(acBody);
-
-  const acGrillMat = new THREE.MeshStandardMaterial({
-    color: 0x444444,
-    roughness: 0.8,
-    metalness: 0.6
+document.querySelector('.mask-wrap').addEventListener('click', () => {
+  document.querySelectorAll('.eye').forEach(el => {
+    el.style.filter = 'drop-shadow(0 0 22px #fff) drop-shadow(0 0 60px #4fc3f7) brightness(2)';
+    setTimeout(() => { el.style.filter = ''; }, 300);
   });
-
-  const acGrill = new THREE.Mesh(
-    new THREE.CircleGeometry(0.22, 32),
-    acGrillMat
-  );
-  acGrill.position.set(acX, acCenterY, acZ + acDepth/2 + 0.001);
-  scene.add(acGrill);
-
-  for (let bladeIdx = 0; bladeIdx < 3; bladeIdx++) {
-    const blade = new THREE.Mesh(
-      new THREE.BoxGeometry(0.42, 0.04, 0.01),
-      new THREE.MeshStandardMaterial({ color: 0x666666 })
-    );
-    blade.position.set(acX, acCenterY, acZ + acDepth/2 - 0.02);
-    blade.rotation.z = (bladeIdx / 3) * Math.PI * 2;
-    scene.add(blade);
-  }
-
-  for (let nanIdx = 0; nanIdx < 8; nanIdx++) {
-    const nan = new THREE.Mesh(
-      new THREE.BoxGeometry(0.008, 0.4, 0.005),
-      new THREE.MeshStandardMaterial({ color: 0x333333 })
-    );
-    nan.position.set(
-      acX - 0.2 + nanIdx * 0.057,
-      acCenterY,
-      acZ + acDepth/2 + 0.003
-    );
-    scene.add(nan);
-  }
-
-  const logoBg = new THREE.Mesh(
-    new THREE.BoxGeometry(0.18, 0.04, 0.002),
-    new THREE.MeshStandardMaterial({ color: 0x1a3a6e })
-  );
-  logoBg.position.set(acX, acBottomY + acHeight - 0.08, acZ + acDepth/2 - 0.001);
-  scene.add(logoBg);
-
-  for (let dx of [-acWidth/2 + 0.08, acWidth/2 - 0.08]) {
-    const bracketH = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, 0.06, acDepth + 0.05),
-      new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7 })
-    );
-    bracketH.position.set(acX + dx, acBottomY - 0.03, acZ);
-    scene.add(bracketH);
-
-    const bracketV = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, 0.45, 0.04),
-      new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7 })
-    );
-    bracketV.position.set(acX + dx, acBottomY + 0.2, acZ - acDepth/2);
-    scene.add(bracketV);
-  }
-
-  const acPipe = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.025, 0.025, 0.5),
-    new THREE.MeshStandardMaterial({ color: 0xdddddd })
-  );
-  acPipe.position.set(acX + 0.2, acBottomY + acHeight + 0.2, acZ - acDepth/2);
-  scene.add(acPipe);
-
-  const airflowMat = new THREE.MeshStandardMaterial({
-    color: 0xffaa44,
-    transparent: true,
-    opacity: 0.08,
-    side: THREE.DoubleSide
-  });
-  const airflow = new THREE.Mesh(
-    new THREE.ConeGeometry(0.4, 0.8, 16, 1, true),
-    airflowMat
-  );
-  airflow.position.set(acX, acCenterY, acZ + acDepth/2 + 0.4);
-  airflow.rotation.x = -Math.PI / 2;
-  scene.add(airflow);
 });
-
-// ==== MẶT TRONG: CỬA KÍNH GIỮA + 2 MẢNG TƯỜNG ĐẶC ====
-const frameMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.5 });
-const doorAreaWidth = 2.0;
-const wallSideWidth = 0.5;
-
-const leftSolidWall = new THREE.Mesh(
-  new THREE.BoxGeometry(wallSideWidth, H, 0.08),
-  wallMat
-);
-leftSolidWall.position.set(-L/2 + wallSideWidth/2, H/2, -D/2);
-leftSolidWall.receiveShadow = true;
-scene.add(leftSolidWall);
-
-const rightSolidWall = new THREE.Mesh(
-  new THREE.BoxGeometry(wallSideWidth, H, 0.08),
-  wallMat
-);
-rightSolidWall.position.set(L/2 - wallSideWidth/2, H/2, -D/2);
-rightSolidWall.receiveShadow = true;
-scene.add(rightSolidWall);
-
-const topFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(doorAreaWidth, 0.12, 0.1),
-  frameMat
-);
-topFrame.position.set(0, H - 0.06, -D/2);
-scene.add(topFrame);
-
-const bottomFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(doorAreaWidth, 0.08, 0.08),
-  frameMat
-);
-bottomFrame.position.set(0, 0.04, -D/2);
-scene.add(bottomFrame);
-
-const glassMat = new THREE.MeshPhysicalMaterial({
-  color: 0xaad6ee,
-  transparent: true,
-  opacity: 0.35,
-  transmission: 0.6,
-  roughness: 0.05,
-  metalness: 0,
-  ior: 1.5
-});
-
-for (let i = 0; i < 2; i++) {
-  const panelCenterX = -doorAreaWidth/2 + 0.5 + i * 1.0;
-
-  const panel = new THREE.Mesh(
-    new THREE.BoxGeometry(1.0 - 0.04, H - 0.2, 0.04),
-    glassMat
-  );
-  panel.position.set(panelCenterX, H/2, -D/2 + (i === 0 ? 0.02 : -0.02));
-  scene.add(panel);
-
-  const pft = new THREE.Mesh(
-    new THREE.BoxGeometry(1.0 - 0.04, 0.05, 0.05),
-    frameMat
-  );
-  pft.position.set(panelCenterX, H - 0.18, -D/2 + (i === 0 ? 0.02 : -0.02));
-  scene.add(pft);
-
-  const pfb = pft.clone();
-  pfb.position.y = 0.12;
-  scene.add(pfb);
-
-  for (let dx of [-0.475, 0.475]) {
-    const sf = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, H - 0.2, 0.05),
-      frameMat
-    );
-    sf.position.set(panelCenterX + dx, H/2, -D/2 + (i === 0 ? 0.02 : -0.02));
-    scene.add(sf);
-  }
-}
-
-const handleMat = new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.8 });
-const handle1 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2), handleMat);
-handle1.position.set(-0.08, 1.0, -D/2 + 0.07);
-scene.add(handle1);
-
-const handle2 = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.2), handleMat);
-handle2.position.set(0.08, 1.0, -D/2 - 0.01);
-scene.add(handle2);
-
-const curtain = new THREE.Mesh(
-  new THREE.BoxGeometry(doorAreaWidth * 0.9, H - 0.4, 0.04),
-  new THREE.MeshStandardMaterial({ color: 0xeae0c8, transparent: true, opacity: 0.7 })
-);
-curtain.position.set(0, H/2, -D/2 - 0.08);
-scene.add(curtain);
-
-// ==== BỂ CÁ NANO ====
-const aquariumWallX = -L/2 + wallSideWidth/2;
-const aquariumShelfY = 0.9;
-
-const aquariumShelf = new THREE.Mesh(
-  new THREE.BoxGeometry(wallSideWidth - 0.02, 0.04, 0.3),
-  new THREE.MeshStandardMaterial({ color: 0x6b5236, roughness: 0.6 })
-);
-aquariumShelf.position.set(aquariumWallX, aquariumShelfY, -D/2 + 0.18);
-aquariumShelf.castShadow = true;
-aquariumShelf.receiveShadow = true;
-scene.add(aquariumShelf);
-
-for (let dx of [-0.18, 0.18]) {
-  const bracket = new THREE.Mesh(
-    new THREE.BoxGeometry(0.03, 0.06, 0.2),
-    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.7 })
-  );
-  bracket.position.set(aquariumWallX + dx, aquariumShelfY - 0.05, -D/2 + 0.13);
-  scene.add(bracket);
-}
-
-const tankWidth = 0.45;
-const tankDepth = 0.25;
-const tankHeight = 0.3;
-const tankCenterY = aquariumShelfY + 0.04 + tankHeight/2;
-const tankZ = -D/2 + 0.18;
-
-const tankBottom = new THREE.Mesh(
-  new THREE.BoxGeometry(tankWidth, 0.015, tankDepth),
-  new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.5 })
-);
-tankBottom.position.set(aquariumWallX, aquariumShelfY + 0.05, tankZ);
-scene.add(tankBottom);
-
-const tankGlassMat = new THREE.MeshPhysicalMaterial({
-  color: 0xcfe8f0,
-  transparent: true,
-  opacity: 0.18,
-  transmission: 0.92,
-  roughness: 0.0,
-  metalness: 0,
-  ior: 1.5
-});
-
-const tankFront = new THREE.Mesh(new THREE.BoxGeometry(tankWidth, tankHeight, 0.005), tankGlassMat);
-tankFront.position.set(aquariumWallX, tankCenterY, tankZ + tankDepth/2);
-scene.add(tankFront);
-
-const tankBack = new THREE.Mesh(new THREE.BoxGeometry(tankWidth, tankHeight, 0.005), tankGlassMat);
-tankBack.position.set(aquariumWallX, tankCenterY, tankZ - tankDepth/2);
-scene.add(tankBack);
-
-const tankLeft = new THREE.Mesh(new THREE.BoxGeometry(0.005, tankHeight, tankDepth), tankGlassMat);
-tankLeft.position.set(aquariumWallX - tankWidth/2, tankCenterY, tankZ);
-scene.add(tankLeft);
-
-const tankRight = new THREE.Mesh(new THREE.BoxGeometry(0.005, tankHeight, tankDepth), tankGlassMat);
-tankRight.position.set(aquariumWallX + tankWidth/2, tankCenterY, tankZ);
-scene.add(tankRight);
-
-const water = new THREE.Mesh(
-  new THREE.BoxGeometry(tankWidth - 0.012, tankHeight * 0.85, tankDepth - 0.012),
-  new THREE.MeshPhysicalMaterial({
-    color: 0x6fa8b8,
-    transparent: true,
-    opacity: 0.32,
-    transmission: 0.75,
-    roughness: 0.1,
-    ior: 1.33
-  })
-);
-water.position.set(aquariumWallX, tankCenterY - tankHeight * 0.075, tankZ);
-scene.add(water);
-
-const substrate = new THREE.Mesh(
-  new THREE.BoxGeometry(tankWidth - 0.02, 0.03, tankDepth - 0.02),
-  new THREE.MeshStandardMaterial({ color: 0xc4b896, roughness: 0.95 })
-);
-substrate.position.set(aquariumWallX, aquariumShelfY + 0.075, tankZ);
-scene.add(substrate);
-
-for (let i = 0; i < 4; i++) {
-  const rock = new THREE.Mesh(
-    new THREE.SphereGeometry(0.025 + Math.random() * 0.015, 6, 6),
-    new THREE.MeshStandardMaterial({ color: 0x4a4a4a, roughness: 0.95 })
-  );
-  rock.scale.y = 0.6;
-  rock.position.set(
-    aquariumWallX - 0.15 + i * 0.1,
-    aquariumShelfY + 0.095,
-    tankZ + (Math.random() - 0.5) * 0.12
-  );
-  rock.castShadow = true;
-  scene.add(rock);
-}
-
-const aquaticMat = new THREE.MeshStandardMaterial({ color: 0x2d7a3e, roughness: 0.7 });
-for (let bushIdx = 0; bushIdx < 5; bushIdx++) {
-  const baseX = aquariumWallX - 0.18 + bushIdx * 0.09;
-  const baseZ = tankZ + (bushIdx % 2 === 0 ? 0.06 : -0.05);
-
-  const numLeaves = 4 + Math.floor(Math.random() * 3);
-  for (let j = 0; j < numLeaves; j++) {
-    const leafHeight = 0.08 + Math.random() * 0.08;
-    const leaf = new THREE.Mesh(
-      new THREE.BoxGeometry(0.012, leafHeight, 0.018),
-      aquaticMat
-    );
-    const ang = Math.random() * Math.PI * 2;
-    leaf.position.set(
-      baseX + Math.cos(ang) * 0.018,
-      aquariumShelfY + 0.09 + leafHeight/2,
-      baseZ + Math.sin(ang) * 0.018
-    );
-    leaf.rotation.z = (Math.random() - 0.5) * 0.4;
-    leaf.rotation.x = (Math.random() - 0.5) * 0.3;
-    scene.add(leaf);
-  }
-}
-
-const fishColors = [0xc9603e, 0xe88845, 0x4a7caf, 0xc9aa3e, 0xb8458a];
-for (let i = 0; i < 5; i++) {
-  const fishGroup = new THREE.Group();
-
-  const fishBody = new THREE.Mesh(
-    new THREE.SphereGeometry(0.014, 10, 8),
-    new THREE.MeshStandardMaterial({ color: fishColors[i], roughness: 0.4 })
-  );
-  fishBody.scale.set(1.8, 0.7, 0.5);
-  fishBody.castShadow = true;
-  fishGroup.add(fishBody);
-
-  const fishTail = new THREE.Mesh(
-    new THREE.ConeGeometry(0.012, 0.022, 4),
-    new THREE.MeshStandardMaterial({ color: fishColors[i], roughness: 0.4 })
-  );
-  fishTail.position.x = -0.022;
-  fishTail.rotation.z = -Math.PI/2;
-  fishGroup.add(fishTail);
-
-  fishGroup.position.set(
-    aquariumWallX + (Math.random() - 0.5) * (tankWidth - 0.08),
-    aquariumShelfY + 0.13 + Math.random() * 0.16,
-    tankZ + (Math.random() - 0.5) * (tankDepth - 0.06)
-  );
-  fishGroup.rotation.y = Math.random() * Math.PI * 2;
-  scene.add(fishGroup);
-}
-
-const tankLight = new THREE.Mesh(
-  new THREE.BoxGeometry(tankWidth - 0.04, 0.025, 0.06),
-  new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff5e1, emissiveIntensity: 0.7 })
-);
-tankLight.position.set(aquariumWallX, tankCenterY + tankHeight/2 + 0.018, tankZ);
-scene.add(tankLight);
-
-const filter = new THREE.Mesh(
-  new THREE.BoxGeometry(0.04, 0.15, 0.04),
-  new THREE.MeshStandardMaterial({ color: 0x1a1a1a })
-);
-filter.position.set(aquariumWallX + tankWidth/2 - 0.04, tankCenterY - 0.02, tankZ - tankDepth/2 + 0.03);
-scene.add(filter);
-
-const tankPointLight = new THREE.PointLight(0x6fa8e8, 0.5, 1.5);
-tankPointLight.position.set(aquariumWallX, tankCenterY, tankZ + 0.1);
-scene.add(tankPointLight);
-
-// ==== KỆ TƯỜNG PHẢI ====
-const shelfMat = new THREE.MeshStandardMaterial({ color: 0x9c7a4d, roughness: 0.6 });
-const rightShelfX = L/2 - wallSideWidth/2;
-const shelfHeights = [0.5, 0.95, 1.4, 1.85];
-
-for (let h of shelfHeights) {
-  const shelf = new THREE.Mesh(
-    new THREE.BoxGeometry(wallSideWidth - 0.05, 0.025, 0.2),
-    shelfMat
-  );
-  shelf.position.set(rightShelfX, h, -D/2 + 0.14);
-  shelf.castShadow = true;
-  shelf.receiveShadow = true;
-  scene.add(shelf);
-
-  for (let dx of [-0.15, 0.15]) {
-    const bracket = new THREE.Mesh(
-      new THREE.BoxGeometry(0.025, 0.04, 0.12),
-      new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.5 })
-    );
-    bracket.position.set(rightShelfX + dx, h - 0.035, -D/2 + 0.1);
-    scene.add(bracket);
-  }
-}
-
-const bookColors = [0xc9603e, 0x4a7c2e, 0xb8893a];
-for (let i = 0; i < 3; i++) {
-  const bk = new THREE.Mesh(
-    new THREE.BoxGeometry(0.04, 0.18, 0.13),
-    new THREE.MeshStandardMaterial({ color: bookColors[i] })
-  );
-  bk.position.set(rightShelfX - 0.1 + i * 0.05, 0.61, -D/2 + 0.14);
-  bk.castShadow = true;
-  scene.add(bk);
-}
-
-const toyBoxSm = new THREE.Mesh(
-  new THREE.BoxGeometry(0.18, 0.12, 0.15),
-  new THREE.MeshStandardMaterial({ color: 0xc9603e })
-);
-toyBoxSm.position.set(rightShelfX, 1.03, -D/2 + 0.14);
-toyBoxSm.castShadow = true;
-scene.add(toyBoxSm);
-
-const photoFrame = new THREE.Mesh(
-  new THREE.BoxGeometry(0.15, 0.18, 0.02),
-  new THREE.MeshStandardMaterial({ color: 0x2a2a2a })
-);
-photoFrame.position.set(rightShelfX, 1.5, -D/2 + 0.13);
-photoFrame.castShadow = true;
-scene.add(photoFrame);
-
-const basket = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.1, 0.08, 0.12),
-  new THREE.MeshStandardMaterial({ color: 0xb89968, roughness: 0.9 })
-);
-basket.position.set(rightShelfX, 1.93, -D/2 + 0.14);
-basket.castShadow = true;
-scene.add(basket);
-
-// ==== SAFETY NET ====
-const cableGroup = new THREE.Group();
-const cableMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7, roughness: 0.3 });
-const netHeight = 2.4;
-
-for (let x = -L/2 + 0.08; x <= L/2 - 0.08; x += 0.08) {
-  const cable = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.004, 0.004, netHeight - 0.25),
-    cableMat
-  );
-  cable.position.set(x, (netHeight - 0.25)/2 + 0.12, D/2);
-  cableGroup.add(cable);
-}
-
-const railMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6 });
-const topRail = new THREE.Mesh(new THREE.BoxGeometry(L, 0.04, 0.05), railMat);
-topRail.position.set(0, netHeight - 0.13, D/2);
-cableGroup.add(topRail);
-
-const bottomRail = new THREE.Mesh(new THREE.BoxGeometry(L, 0.04, 0.05), railMat);
-bottomRail.position.set(0, 0.12, D/2);
-cableGroup.add(bottomRail);
-
-const handRail = new THREE.Mesh(new THREE.BoxGeometry(L, 0.04, 0.06), railMat);
-handRail.position.set(0, 1.0, D/2);
-cableGroup.add(handRail);
-
-scene.add(cableGroup);
-
-const screen = new THREE.Mesh(
-  new THREE.PlaneGeometry(L, netHeight - 0.25),
-  new THREE.MeshStandardMaterial({
-    color: 0x666666,
-    transparent: true,
-    opacity: 0.15,
-    side: THREE.DoubleSide
-  })
-);
-screen.position.set(0, (netHeight - 0.25)/2 + 0.12, D/2 + 0.04);
-scene.add(screen);
-
-// ==== BÀN XẾP DI ĐỘNG ====
-const portableDesk = new THREE.Mesh(
-  new THREE.BoxGeometry(0.7, 0.03, 0.4),
-  new THREE.MeshStandardMaterial({ color: 0xc9603e, roughness: 0.5 })
-);
-portableDesk.position.set(0, 0.5, 0.15);
-portableDesk.castShadow = true;
-portableDesk.receiveShadow = true;
-scene.add(portableDesk);
-
-const legMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.5 });
-for (let dx of [-0.3, 0.3]) {
-  const leg1 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.55, 0.025), legMat);
-  leg1.position.set(dx, 0.24, 0.15);
-  leg1.rotation.x = 0.2;
-  scene.add(leg1);
-
-  const leg2 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.55, 0.025), legMat);
-  leg2.position.set(dx, 0.24, 0.15);
-  leg2.rotation.x = -0.2;
-  scene.add(leg2);
-}
-
-const book = new THREE.Mesh(
-  new THREE.BoxGeometry(0.18, 0.03, 0.13),
-  new THREE.MeshStandardMaterial({ color: 0x4a7c2e })
-);
-book.position.set(-0.2, 0.53, 0.15);
-book.castShadow = true;
-scene.add(book);
-
-const cup = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.04, 0.035, 0.08),
-  new THREE.MeshStandardMaterial({ color: 0xfaf5ea })
-);
-cup.position.set(0.2, 0.555, 0.15);
-cup.castShadow = true;
-scene.add(cup);
-
-const pencilCase = new THREE.Mesh(
-  new THREE.BoxGeometry(0.18, 0.04, 0.06),
-  new THREE.MeshStandardMaterial({ color: 0xb8893a })
-);
-pencilCase.position.set(-0.2, 0.55, 0.25);
-pencilCase.castShadow = true;
-scene.add(pencilCase);
-
-// ==== VÒI NƯỚC + GIÁ ĐỂ GIÀY ====
-const faucetMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7 });
-const faucetPipe = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.018, 0.018, 0.12),
-  faucetMat
-);
-faucetPipe.position.set(L/2 - 0.08, 1.1, -0.25);
-faucetPipe.rotation.z = Math.PI/2;
-scene.add(faucetPipe);
-
-const faucetHandle = new THREE.Mesh(
-  new THREE.SphereGeometry(0.035, 8, 8),
-  new THREE.MeshStandardMaterial({ color: 0xc9603e, metalness: 0.5 })
-);
-faucetHandle.position.set(L/2 - 0.04, 1.16, -0.25);
-scene.add(faucetHandle);
-
-const drainPipe = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.04, 0.04, H - 0.5),
-  new THREE.MeshStandardMaterial({ color: 0xeeeeee })
-);
-drainPipe.position.set(L/2 - 0.1, (H - 0.5)/2 + 0.5, -0.4);
-scene.add(drainPipe);
-
-const rackMat = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.5 });
-for (let i = 0; i < 4; i++) {
-  const shelf = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.02, 0.2), rackMat);
-  shelf.position.set(L/2 - 0.25, 0.1 + i * 0.18, -0.2);
-  scene.add(shelf);
-}
-for (let dx of [-0.18, 0.18]) {
-  for (let dz of [-0.08, 0.08]) {
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.7), rackMat);
-    post.position.set(L/2 - 0.25 + dx, 0.35, -0.2 + dz);
-    scene.add(post);
-  }
-}
-
-// ==== CÂY XANH ====
-function createSnakePlant(x, y, z) {
-  const group = new THREE.Group();
-  const pot = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.13, 0.1, 0.18, 16),
-    new THREE.MeshStandardMaterial({ color: 0xfaf5ea, roughness: 0.7 })
-  );
-  pot.position.y = 0.09;
-  pot.castShadow = true;
-  group.add(pot);
-
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x4a7c2e, roughness: 0.6 });
-  const yellowMat = new THREE.MeshStandardMaterial({ color: 0xb8893a, roughness: 0.6 });
-
-  for (let i = 0; i < 6; i++) {
-    const angle = (i / 6) * Math.PI * 2;
-    const leaf = new THREE.Mesh(
-      new THREE.BoxGeometry(0.025, 0.4, 0.07),
-      i % 3 === 0 ? yellowMat : leafMat
-    );
-    leaf.position.set(Math.cos(angle) * 0.06, 0.38, Math.sin(angle) * 0.06);
-    leaf.rotation.z = Math.cos(angle) * 0.2;
-    leaf.rotation.x = Math.sin(angle) * 0.2;
-    leaf.castShadow = true;
-    group.add(leaf);
-  }
-  group.position.set(x, y, z);
-  return group;
-}
-
-function createAloe(x, y, z, potColor = 0xc9603e) {
-  const group = new THREE.Group();
-  const pot = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.13, 0.1, 0.16, 16),
-    new THREE.MeshStandardMaterial({ color: potColor, roughness: 0.8 })
-  );
-  pot.position.y = 0.08;
-  pot.castShadow = true;
-  group.add(pot);
-
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x6b9b3e, roughness: 0.5 });
-  for (let i = 0; i < 8; i++) {
-    const angle = (i / 8) * Math.PI * 2;
-    const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.32, 4), leafMat);
-    leaf.position.set(Math.cos(angle) * 0.07, 0.3, Math.sin(angle) * 0.07);
-    leaf.rotation.z = Math.cos(angle) * 0.4;
-    leaf.rotation.x = Math.sin(angle) * 0.4;
-    leaf.castShadow = true;
-    group.add(leaf);
-  }
-  group.position.set(x, y, z);
-  return group;
-}
-
-function createHerbs(x, y, z, color = 0xfaf5ea) {
-  const group = new THREE.Group();
-  const pot = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.11, 0.085, 0.14, 16),
-    new THREE.MeshStandardMaterial({ color: color, roughness: 0.7 })
-  );
-  pot.position.y = 0.07;
-  pot.castShadow = true;
-  group.add(pot);
-
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x4a7c2e });
-  for (let i = 0; i < 10; i++) {
-    const ball = new THREE.Mesh(
-      new THREE.SphereGeometry(0.035 + Math.random() * 0.02, 8, 8),
-      leafMat
-    );
-    ball.position.set(
-      (Math.random() - 0.5) * 0.16,
-      0.16 + Math.random() * 0.07,
-      (Math.random() - 0.5) * 0.16
-    );
-    ball.castShadow = true;
-    group.add(ball);
-  }
-  group.position.set(x, y, z);
-  return group;
-}
-
-function createZZPlant(x, y, z) {
-  const group = new THREE.Group();
-  const pot = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.18, 0.14, 0.28, 16),
-    new THREE.MeshStandardMaterial({ color: 0xfaf5ea, roughness: 0.7 })
-  );
-  pot.position.y = 0.14;
-  pot.castShadow = true;
-  pot.receiveShadow = true;
-  group.add(pot);
-
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x3d6b1e, roughness: 0.4 });
-  for (let i = 0; i < 5; i++) {
-    const angle = (i / 5) * Math.PI * 2;
-    for (let s = 0; s < 6; s++) {
-      const leafPair = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), leafMat);
-      leafPair.scale.set(1, 0.4, 1.5);
-      leafPair.position.set(
-        Math.cos(angle) * (0.09 + s * 0.025),
-        0.28 + s * 0.1,
-        Math.sin(angle) * (0.09 + s * 0.025)
-      );
-      leafPair.castShadow = true;
-      group.add(leafPair);
-    }
-  }
-  group.position.set(x, y, z);
-  return group;
-}
-
-scene.add(createSnakePlant(-0.9, 0.95, D/2 - 0.12));
-scene.add(createAloe(-0.4, 0.95, D/2 - 0.12));
-scene.add(createHerbs(0.1, 0.95, D/2 - 0.12, 0xb89968));
-scene.add(createHerbs(0.6, 0.95, D/2 - 0.12, 0xc9603e));
-scene.add(createSnakePlant(1.1, 0.95, D/2 - 0.12));
-
-scene.add(createZZPlant(-L/2 + 0.25, 0, D/2 - 0.22));
-scene.add(createAloe(L/2 - 0.6, 0.05, D/2 - 0.25, 0xfaf5ea));
-
-// ==== AISLE INDICATOR ====
-const aisle = new THREE.Mesh(
-  new THREE.PlaneGeometry(L - 0.8, 0.4),
-  new THREE.MeshStandardMaterial({ color: 0x4a7c2e, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
-);
-aisle.rotation.x = -Math.PI / 2;
-aisle.position.set(0, 0.06, -0.05);
-scene.add(aisle);
-
-const axesHelper = new THREE.AxesHelper(0.4);
-axesHelper.position.set(-L/2 + 0.05, 0.1, -D/2 + 0.05);
-scene.add(axesHelper);
-
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(40, 40),
-  new THREE.MeshStandardMaterial({ color: 0xc4ccd4 })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -3;
-scene.add(ground);
-
-// ==== ANIMATION ====
-function animate() {
-  requestAnimationFrame(animate);
-  controls.update();
-  renderer.render(scene, camera);
-}
-animate();
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-// ==== VIEW PRESETS ====
-window.setView = function(view) {
-  document.querySelectorAll('#views button').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
-
-  const targets = {
-    iso: { pos: [5, 4, 5], target: [0, 1.2, 0] },
-    top: { pos: [0, 7, 0.05], target: [0, 0, 0] },
-    front: { pos: [0, 1.8, 5], target: [0, 1.8, 0] },
-    ac: { pos: [0, 2.7, 3], target: [0, 2.7, 0.4] },
-    aquarium: { pos: [-0.7, 1.3, 0.9], target: [-1.25, 1.1, -0.27] }
-  };
-  const t = targets[view];
-
-  const startPos = camera.position.clone();
-  const startTarget = controls.target.clone();
-  const endPos = new THREE.Vector3(...t.pos);
-  const endTarget = new THREE.Vector3(...t.target);
-
-  let progress = 0;
-  function tween() {
-    progress += 0.04;
-    if (progress >= 1) progress = 1;
-    const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-    camera.position.lerpVectors(startPos, endPos, ease);
-    controls.target.lerpVectors(startTarget, endTarget, ease);
-    if (progress < 1) requestAnimationFrame(tween);
-  }
-  tween();
-};
 </script>
 
 </body>
